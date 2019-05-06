@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472</TargetFrameworks>
+    <RootNamespace>RouteServiceAuthenticationBuildpack</RootNamespace>
+    <AssemblyName>buildpack</AssemblyName>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RouteServiceIdentityModule\RouteServiceIdentityModule.csproj" />
+  </ItemGroup>
+
+</Project>
