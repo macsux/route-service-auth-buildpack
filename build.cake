@@ -8,7 +8,7 @@ var vMinor = Argument("vminor","0");
 var vBuild = (int)(DateTime.UtcNow - new DateTime(2000, 1, 1)).TotalSeconds;
 var version = $"{vMajor}.{vMinor}.{vBuild}";
 
-var framework = "net47";
+var framework = "net472";
 var runtime = "win-x64";
 if(stack.ToLower().Contains("linux"))
 {

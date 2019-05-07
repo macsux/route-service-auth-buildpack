@@ -1,4 +1,5 @@
-﻿using System.Web.Mvc;
+﻿using System;
+using System.Web.Mvc;
 
 namespace TestApp.Controllers
 {
@@ -6,6 +7,7 @@ namespace TestApp.Controllers
     {
         public ActionResult Index()
         {
+            Console.WriteLine("User: " + User.Identity.Name);
             return View();
         }
 
