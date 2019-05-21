@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RouteServiceAuthenticationBuildpack": {
+      "commandName": "Project",
+      "commandLineArgs": "supply C:\\Development\\Source\\netsdc\\route-service-auth-buildpack\\src\\TestApp\\bin\\Release\\Publish a a 0"
+    }
+  }
+}
