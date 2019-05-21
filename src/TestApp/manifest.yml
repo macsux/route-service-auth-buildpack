@@ -1,6 +1,6 @@
 ---
 applications:
-- name: iwasvc
+- name: iwasvc-testapp
   path: bin\Release\Publish
   random-route: true
   memory: 512M
@@ -9,3 +9,4 @@ applications:
   buildpacks:
     - https://github.com/macsux/route-service-auth-buildpack/releases/download/1.0/RouteServiceAuthenticationBuildpack-win-x64-1.0.610429544.zip 
     - hwc_buildpack
+  
