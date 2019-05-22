@@ -2,7 +2,7 @@
   "profiles": {
     "RouteServiceAuthenticationBuildpack": {
       "commandName": "Project",
-      "commandLineArgs": "supply C:\\Development\\Source\\netsdc\\route-service-auth-buildpack\\src\\TestApp\\bin\\Release\\Publish a a 0"
+      "commandLineArgs": "supply C:\\Development\\Sandbox\\C2CSpike\\WcfService\\WcfService1 a a 0"
     }
   }
 }

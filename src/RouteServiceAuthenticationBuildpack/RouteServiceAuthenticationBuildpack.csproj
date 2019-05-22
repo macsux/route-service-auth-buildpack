@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RouteServiceAuthorizationPolicy\RouteServiceAuthorizationPolicy.csproj" />
     <ProjectReference Include="..\RouteServiceIdentityModule\RouteServiceIdentityModule.csproj" />
   </ItemGroup>
 
