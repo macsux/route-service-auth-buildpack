@@ -96,7 +96,7 @@ namespace RouteServiceAuthenticationBuildpack
 
             if (services != null)
             {
-                Console.WriteLine("-----> Detected WCF Service application..");
+                Console.WriteLine("-----> Detected WCF Service application");
 
                 var serviceModel = doc.SelectSingleNode("configuration/system.serviceModel");
 
@@ -164,13 +164,13 @@ namespace RouteServiceAuthenticationBuildpack
             var doc = new XmlDocument();
             doc.Load(webConfigPath);
 
-            Console.WriteLine("-----> Checking for WCF Service application...");
+            Console.WriteLine("-----> Checking for WCF Client application...");
 
             var client = doc.SelectSingleNode("configuration/system.serviceModel/client");
 
             if (client != null)
             {
-                Console.WriteLine("-----> Detected WCF Client in this application...");
+                Console.WriteLine("-----> Detected WCF Client in this application");
 
                 var dir = new DirectoryInfo(buildPath);
                 if (dir.EnumerateFiles("RouteServiceIwaWcfInterceptor.dll", SearchOption.AllDirectories).ToList().Count == 0
