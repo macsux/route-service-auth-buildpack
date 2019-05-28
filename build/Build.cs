@@ -117,9 +117,13 @@ class Build : NukeBuild
             var publishDirectory = buildpackProject.Directory / "bin" / Configuration / Framework / Runtime / "publish";
             var workBinDirectory = workDirectory / "bin";
             var scriptsDirectory = RootDirectory / "scripts";
+
+            var requiredAssembliesSourceDirectory = SourceDirectory / "requiredAssemblies";
+            var requiredAssembliesTargetDirectory = workBinDirectory / "requiredAssemblies";
             
             CopyDirectoryRecursively(publishDirectory, workBinDirectory, DirectoryExistsPolicy.Merge);
             CopyDirectoryRecursively(scriptsDirectory, workBinDirectory, DirectoryExistsPolicy.Merge);
+            CopyDirectoryRecursively(requiredAssembliesSourceDirectory, requiredAssembliesTargetDirectory, DirectoryExistsPolicy.Merge);
             var tempZipFile = TemporaryDirectory / PackageZipName;
             
             ZipFile.CreateFromDirectory(workDirectory, tempZipFile);
