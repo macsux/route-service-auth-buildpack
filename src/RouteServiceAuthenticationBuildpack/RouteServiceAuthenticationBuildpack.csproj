@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Pivotal.WcfClient.Kerberos.Interceptor" Version="1.0.1" />
+    <PackageReference Include="Pivotal.WcfClient.Kerberos.Interceptor" Version="0.1.0-beta" />
   </ItemGroup>
 
   <ItemGroup>
