@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -96,7 +97,7 @@ namespace RouteServiceAuthenticationBuildpack
 
             if (services != null)
             {
-                Console.WriteLine("-----> Detected WCF Service application..");
+                Console.WriteLine("-----> Detected WCF Service application");
 
                 var serviceModel = doc.SelectSingleNode("configuration/system.serviceModel");
 
@@ -120,14 +121,24 @@ namespace RouteServiceAuthenticationBuildpack
 
                 var individualBehaviours = serviceBehaviours.SelectNodes("behavior");
 
-                if (individualBehaviours.Count == 0)
+                bool pivotaWcfServiceIwaAuthBehaviourExists = false;
+
+                for (int i = 0; i < individualBehaviours.Count; i++)
+                {
+                    if (individualBehaviours.Item(i).Attributes["name"].Value == "PivotaWcfServiceIwaAuthBehaviour")
+                        pivotaWcfServiceIwaAuthBehaviourExists = true;
+                }
+
+                if (!pivotaWcfServiceIwaAuthBehaviourExists)
                 {
                     var individualBehaviour = doc.CreateElement("behavior");
                     individualBehaviour.SetAttribute("name", "PivotaWcfServiceIwaAuthBehaviour");
+                    individualBehaviour.AppendChild(CreateServiceAuthorizationElement(doc, individualBehaviour));
                     serviceBehaviours.AppendChild(individualBehaviour);
+                }
 
-                    individualBehaviour.AppendChild(CreateServiceAuthorizationElement(doc, null));
-
+                if (individualBehaviours.Count == 0)
+                {
                     var individualServices = services.SelectNodes("service");
 
                     for (int i = 0; i < individualServices.Count; i++)
@@ -164,23 +175,51 @@ namespace RouteServiceAuthenticationBuildpack
             var doc = new XmlDocument();
             doc.Load(webConfigPath);
 
-            Console.WriteLine("-----> Checking for WCF Service application...");
+            Console.WriteLine("-----> Checking for WCF Client application...");
 
             var client = doc.SelectSingleNode("configuration/system.serviceModel/client");
 
+            var svcEndpointLevelBehaviours = new List<string>();
+            var clientEndpointLevelBehaviours = new List<string>();
+
             if (client != null)
             {
-                Console.WriteLine("-----> Detected WCF Client in this application...");
+                Console.WriteLine("-----> Detected WCF Client in this application");
 
                 var dir = new DirectoryInfo(buildPath);
                 if (dir.EnumerateFiles("RouteServiceIwaWcfInterceptor.dll", SearchOption.AllDirectories).ToList().Count == 0
                     || dir.EnumerateFiles("Microsoft.AspNetCore.Authentication.GssKerberos.dll", SearchOption.AllDirectories).ToList().Count == 0)
                 {
-                    Console.Error.WriteLine("-----> **ERROR** Could not find assembly 'RouteServiceIwaWcfInterceptor' or one/more of its dependencies, make sure to install the package 'Pivotal.WcfClient.Kerberos.Interceptor' from myget/nuget");
+                    Console.Error.WriteLine("-----> **ERROR** Could not find assembly 'RouteServiceIwaWcfInterceptor' or one/more of its dependencies, make sure to install the latest package 'Pivotal.WcfClient.Kerberos.Interceptor' from nuget or https://www.myget.org/F/ajaganathan/api/v3/index.json");
                     Environment.Exit(-1);
                 }
 
                 Console.WriteLine("-----> Applying configuration changes to add RouteServiceIwaWcfInterceptor, from nuget package Pivotal.WcfClient.Kerberos.Interceptor into the egress pipeline...");
+
+
+                //ServiceLevel Service/Endpoint behaviours
+                var individualServices = doc.SelectNodes("configuration/system.serviceModel/services/service");
+                for (int i = 0; i < individualServices.Count; i++)
+                {
+                    var svcendpoints = individualServices.Item(i).SelectNodes("endpoint");
+
+                    for (int j = 0; j < svcendpoints.Count; j++)
+                    {
+                        var elbc = svcendpoints.Item(0).Attributes["behaviorConfiguration"]?.Value;
+                        if (!string.IsNullOrWhiteSpace(elbc))
+                            svcEndpointLevelBehaviours.Add(elbc);
+                    }
+                }
+
+                //ClientLevel Service/Endpoint behaviours
+                var endpoints = client.SelectNodes("endpoint");
+
+                for (int j = 0; j < endpoints.Count; j++)
+                {
+                    var elbc = endpoints.Item(0).Attributes["behaviorConfiguration"]?.Value;
+                    if (!string.IsNullOrWhiteSpace(elbc))
+                        clientEndpointLevelBehaviours.Add(elbc);
+                }
 
                 var serviceModel = doc.SelectSingleNode("configuration/system.serviceModel");
 
@@ -202,14 +241,24 @@ namespace RouteServiceAuthenticationBuildpack
 
                 var individualBehaviours = endpointBehaviours.SelectNodes("behavior");
 
+                bool pivotalWcfClientIwaInterceptorBehaviourExists = false;
+
+                for (int i = 0; i < individualBehaviours.Count; i++)
+                {
+                    if (individualBehaviours.Item(i).Attributes["name"].Value == "pivotalWcfClientIwaInterceptorBehaviour")
+                        pivotalWcfClientIwaInterceptorBehaviourExists = true;
+                }
+
+                if (!pivotalWcfClientIwaInterceptorBehaviourExists)
+                {
+                    var pivotalWcfClientIwaInterceptorBehaviour = doc.CreateElement("behavior");
+                    pivotalWcfClientIwaInterceptorBehaviour.SetAttribute("name", "pivotalWcfClientIwaInterceptorBehaviour");
+                    pivotalWcfClientIwaInterceptorBehaviour.AppendChild(AddInterceptorExtension(doc));
+                    endpointBehaviours.AppendChild(pivotalWcfClientIwaInterceptorBehaviour);
+                }
+
                 if (individualBehaviours.Count == 0)
                 {
-                    var individualBehaviour = doc.CreateElement("behavior");
-                    individualBehaviour.SetAttribute("name", "pivotalWcfClientIwaInterceptorBehaviour");
-                    endpointBehaviours.AppendChild(individualBehaviour);
-
-                    individualBehaviour.AppendChild(AddInterceptorExtension(doc));
-
                     var endPoints = client.SelectNodes("endpoint");
 
                     for (int i = 0; i < endPoints.Count; i++)
@@ -223,10 +272,32 @@ namespace RouteServiceAuthenticationBuildpack
                 {
                     for (int i = 0; i < individualBehaviours.Count; i++)
                     {
-                        if (individualBehaviours.Item(i).SelectSingleNode("pivotalWcfClientIwaInterceptorExtensions") == null)
+                        var behaviourName = individualBehaviours.Item(i).Attributes["name"].Value;
+
+                        if (svcEndpointLevelBehaviours.Contains(behaviourName) && clientEndpointLevelBehaviours.Contains(behaviourName))
                         {
-                            individualBehaviours.Item(i).AppendChild(AddInterceptorExtension(doc));
+                            Console.Error.WriteLine($"EndPointBehaviour '{behaviourName}' is shared by client and service. Please split them and continue!");
+                            Environment.Exit(-1);
                         }
+                        else if (clientEndpointLevelBehaviours.Contains(behaviourName))
+                        {
+                            if (individualBehaviours.Item(i).SelectSingleNode("pivotalWcfClientIwaInterceptorExtensions") == null)
+                            {
+                                individualBehaviours.Item(i).AppendChild(AddInterceptorExtension(doc));
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < endpoints.Count; i++)
+                {
+                    var elbc = endpoints.Item(0).Attributes["behaviorConfiguration"]?.Value;
+
+                    if (!string.IsNullOrWhiteSpace(elbc))
+                    {
+                        var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
+                        behaviourConfigurationAttribute.Value = "pivotalWcfClientIwaInterceptorBehaviour";
+                        endpoints.Item(i).Attributes.Append(behaviourConfigurationAttribute);
                     }
                 }
 
@@ -268,13 +339,18 @@ namespace RouteServiceAuthenticationBuildpack
 
                 ValidateIfAllEndPointsAreSetWithBehaviourConfiguration(client);
 
-                string[] files = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(typeof(RouteServiceAuthenticationBuildpack).Assembly.Location), "requiredAssemblies"));
-
-                Console.WriteLine("-----> Injecting MIT Kerberos assembllies and c++ redistributables into the application target directory...");
-
-                foreach (string file in files)
-                    File.Copy(file, Path.Combine(buildPath, "bin", Path.GetFileName(file)), true);
+                //InjectKerberosAssembliesAndRedistributables(buildPath);
             }
+        }
+
+        private static void InjectKerberosAssembliesAndRedistributables(string buildPath)
+        {
+            string[] files = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(typeof(RouteServiceAuthenticationBuildpack).Assembly.Location), "requiredAssemblies"));
+
+            Console.WriteLine("-----> Injecting MIT Kerberos assembllies and c++ redistributables into the application target directory...");
+
+            foreach (string file in files)
+                File.Copy(file, Path.Combine(buildPath, "bin", Path.GetFileName(file)), true);
         }
 
         private XmlNode AddInterceptorExtension(XmlDocument xmlDoc)
