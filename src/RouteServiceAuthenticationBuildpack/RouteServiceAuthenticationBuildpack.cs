@@ -13,6 +13,7 @@ namespace RouteServiceAuthenticationBuildpack
 {
     public class RouteServiceAuthenticationBuildpack : SupplyBuildpack
     {
+        const string INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT_ENV_VAR_NM = "INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT";
 
         protected override bool Detect(string buildPath)
         {
@@ -141,6 +142,14 @@ namespace RouteServiceAuthenticationBuildpack
             {
                 Console.WriteLine("-----> Detected WCF Client in this application");
 
+                var isEgressModuleRequired = Convert.ToBoolean(Environment.GetEnvironmentVariable(INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT_ENV_VAR_NM) ?? "false");
+
+                if(!isEgressModuleRequired)
+                {
+                    Console.WriteLine($"-----> **WARNING** Skipping configuring egress modules for this WCF Client. To include, set the environment variable '{INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT_ENV_VAR_NM}' to 'true'");
+                    return;
+                }
+
                 ValidateIfPivotalWcfClientInterceptorPackageIsInstalled(buildPath);
 
                 Console.WriteLine("-----> Applying configuration changes to add RouteServiceIwaWcfInterceptor, from nuget package PivotalServices.WcfClient.Kerberos.Interceptor into the egress pipeline...");
@@ -164,10 +173,9 @@ namespace RouteServiceAuthenticationBuildpack
                 if (!pivotalWcfClientIwaInterceptorBehaviourExists)
                     CreatePivotalWcfClientIwaInterceptorBehaviour(doc, endpointBehaviours);
 
-                if (individualBehaviours.Count == 0)
-                    SetPivotalWcfClientIwaInterceptorBehaviourToAllEndpoints(doc, client);
-                else
-                    AddPivotalWcfClientIwaInterceptorExtensionsToPreExistingClientEndpointBehaviours(doc, svcEndpointLevelBehaviours, clientEndpointLevelBehaviours, individualBehaviours);
+                SetPivotalWcfClientIwaInterceptorBehaviourToAllEndpoints(doc, client);
+
+                AddPivotalWcfClientIwaInterceptorExtensionsToPreExistingClientEndpointBehaviours(doc, svcEndpointLevelBehaviours, clientEndpointLevelBehaviours, individualBehaviours);
 
                 ApplyBehaviourConfigurationToEndpointsNotHavingBahaviourConfiguredAlready(doc, endpoints);
 
@@ -279,9 +287,12 @@ namespace RouteServiceAuthenticationBuildpack
 
             for (int i = 0; i < endPoints.Count; i++)
             {
-                var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
-                behaviourConfigurationAttribute.Value = "pivotalWcfClientIwaInterceptorBehaviour";
-                endPoints.Item(i).Attributes.Append(behaviourConfigurationAttribute);
+                if (endPoints.Item(i).Attributes["behaviorConfiguration"] == null)
+                {
+                    var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
+                    behaviourConfigurationAttribute.Value = "pivotalWcfClientIwaInterceptorBehaviour";
+                    endPoints.Item(i).Attributes.Append(behaviourConfigurationAttribute);
+                }
             }
         }
 
