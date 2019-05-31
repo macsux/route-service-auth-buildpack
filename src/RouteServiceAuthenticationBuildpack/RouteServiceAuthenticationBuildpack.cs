@@ -194,7 +194,7 @@ namespace RouteServiceAuthenticationBuildpack
 
                 ValidateIfAllEndPointsAreSetWithBehaviourConfiguration(client);
 
-                //InjectKerberosAssembliesAndRedistributables(buildPath);
+                InjectKerberosAssembliesAndRedistributables(buildPath);
             }
         }
 
