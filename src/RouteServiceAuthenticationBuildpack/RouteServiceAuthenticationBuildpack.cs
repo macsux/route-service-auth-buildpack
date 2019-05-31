@@ -113,10 +113,9 @@ namespace RouteServiceAuthenticationBuildpack
                 if (!pivotaWcfServiceIwaAuthBehaviourExists)
                     CreatePivotalServiceBehaviour(doc, serviceBehaviours);
 
-                if (individualBehaviours.Count == 0)
-                    SetPivotaWcfServiceIwaAuthBehaviourConfigurationToAllServices(doc, services);
-                else
-                    AddAuthorizationElementToPreExistingBehaviours(doc, individualBehaviours);
+                SetPivotaWcfServiceIwaAuthBehaviourConfigurationToAllServices(doc, services);
+
+                AddAuthorizationElementToPreExistingBehaviours(doc, individualBehaviours);
 
                 doc.Save(webConfigPath);
 
@@ -160,106 +159,151 @@ namespace RouteServiceAuthenticationBuildpack
 
                 var individualBehaviours = endpointBehaviours.SelectNodes("behavior");
 
-                bool pivotalWcfClientIwaInterceptorBehaviourExists = false;
-
-                for (int i = 0; i < individualBehaviours.Count; i++)
-                {
-                    if (individualBehaviours.Item(i).Attributes["name"].Value == "pivotalWcfClientIwaInterceptorBehaviour")
-                        pivotalWcfClientIwaInterceptorBehaviourExists = true;
-                }
+                var pivotalWcfClientIwaInterceptorBehaviourExists = PivotalWcfClientIwaInterceptorBehaviourExistsAlready(individualBehaviours);
 
                 if (!pivotalWcfClientIwaInterceptorBehaviourExists)
-                {
-                    var pivotalWcfClientIwaInterceptorBehaviour = doc.CreateElement("behavior");
-                    pivotalWcfClientIwaInterceptorBehaviour.SetAttribute("name", "pivotalWcfClientIwaInterceptorBehaviour");
-                    pivotalWcfClientIwaInterceptorBehaviour.AppendChild(AddInterceptorExtension(doc));
-                    endpointBehaviours.AppendChild(pivotalWcfClientIwaInterceptorBehaviour);
-                }
+                    CreatePivotalWcfClientIwaInterceptorBehaviour(doc, endpointBehaviours);
 
                 if (individualBehaviours.Count == 0)
-                {
-                    var endPoints = client.SelectNodes("endpoint");
-
-                    for (int i = 0; i < endPoints.Count; i++)
-                    {
-                        var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
-                        behaviourConfigurationAttribute.Value = "pivotalWcfClientIwaInterceptorBehaviour";
-                        endPoints.Item(i).Attributes.Append(behaviourConfigurationAttribute);
-                    }
-                }
+                    SetPivotalWcfClientIwaInterceptorBehaviourToAllEndpoints(doc, client);
                 else
-                {
-                    for (int i = 0; i < individualBehaviours.Count; i++)
-                    {
-                        var behaviourName = individualBehaviours.Item(i).Attributes["name"].Value;
+                    AddPivotalWcfClientIwaInterceptorExtensionsToPreExistingClientEndpointBehaviours(doc, svcEndpointLevelBehaviours, clientEndpointLevelBehaviours, individualBehaviours);
 
-                        if (svcEndpointLevelBehaviours.Contains(behaviourName) && clientEndpointLevelBehaviours.Contains(behaviourName))
-                        {
-                            Console.Error.WriteLine($"EndPointBehaviour '{behaviourName}' is shared by client and service. Please split them and continue!");
-                            Environment.Exit(-1);
-                        }
-                        else if (clientEndpointLevelBehaviours.Contains(behaviourName))
-                        {
-                            if (individualBehaviours.Item(i).SelectSingleNode("pivotalWcfClientIwaInterceptorExtensions") == null)
-                            {
-                                individualBehaviours.Item(i).AppendChild(AddInterceptorExtension(doc));
-                            }
-                        }
-                    }
-                }
+                ApplyBehaviourConfigurationToEndpointsNotHavingBahaviourConfiguredAlready(doc, endpoints);
 
-                for (int i = 0; i < endpoints.Count; i++)
-                {
-                    var elbc = endpoints.Item(0).Attributes["behaviorConfiguration"]?.Value;
+                var extensions = GetOrCreateExtensionsNode(doc, serviceModel);
 
-                    if (!string.IsNullOrWhiteSpace(elbc))
-                    {
-                        var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
-                        behaviourConfigurationAttribute.Value = "pivotalWcfClientIwaInterceptorBehaviour";
-                        endpoints.Item(i).Attributes.Append(behaviourConfigurationAttribute);
-                    }
-                }
-
-                var extensions = (XmlElement)serviceModel.SelectSingleNode("extensions");
-
-                if (extensions == null)
-                {
-                    extensions = doc.CreateElement("extensions");
-                    serviceModel.AppendChild(extensions);
-                }
-
-                var behaviorExtensions = (XmlElement)extensions.SelectSingleNode("behaviorExtensions");
-
-                if (behaviorExtensions == null)
-                {
-                    behaviorExtensions = doc.CreateElement("behaviorExtensions");
-                    extensions.AppendChild(behaviorExtensions);
-                }
+                var behaviorExtensions = GetOrCreateBehaviourExtensionsNode(doc, extensions);
 
                 var pivotalIwaInterceptorExtensions = behaviorExtensions.SelectNodes("add");
 
-                bool isExtensionExist = false;
-
-                for (int i = 0; i < pivotalIwaInterceptorExtensions.Count; i++)
-                {
-                    if (pivotalIwaInterceptorExtensions.Item(i).Attributes["name"].Value == "pivotalWcfClientIwaInterceptorExtensions")
-                        isExtensionExist = true;
-                }
+                var isExtensionExist = PivotalWcfClientIwaInterceptorExtensionsExists(pivotalIwaInterceptorExtensions);
 
                 if (!isExtensionExist)
-                {
-                    var interceptorExtensionNode = doc.CreateElement("add");
-                    interceptorExtensionNode.SetAttribute("name", "pivotalWcfClientIwaInterceptorExtensions");
-                    interceptorExtensionNode.SetAttribute("type", typeof(IwaInterceptorBehaviourExtensionElement).AssemblyQualifiedName);
-                    behaviorExtensions.AppendChild(interceptorExtensionNode);
-                }
+                    CreatePivotalWcfClientIwaInterceptorExtensions(doc, behaviorExtensions);
 
                 doc.Save(webConfigPath);
 
                 ValidateIfAllEndPointsAreSetWithBehaviourConfiguration(client);
 
-                InjectKerberosAssembliesAndRedistributables(buildPath);
+                //InjectKerberosAssembliesAndRedistributables(buildPath);
             }
+        }
+
+        private static void CreatePivotalWcfClientIwaInterceptorExtensions(XmlDocument doc, XmlElement behaviorExtensions)
+        {
+            var interceptorExtensionNode = doc.CreateElement("add");
+            interceptorExtensionNode.SetAttribute("name", "pivotalWcfClientIwaInterceptorExtensions");
+            interceptorExtensionNode.SetAttribute("type", typeof(IwaInterceptorBehaviourExtensionElement).AssemblyQualifiedName);
+            behaviorExtensions.AppendChild(interceptorExtensionNode);
+        }
+
+        private static bool PivotalWcfClientIwaInterceptorExtensionsExists(XmlNodeList pivotalIwaInterceptorExtensions)
+        {
+            bool isExtensionExist = false;
+
+            for (int i = 0; i < pivotalIwaInterceptorExtensions.Count; i++)
+            {
+                if (pivotalIwaInterceptorExtensions.Item(i).Attributes["name"].Value == "pivotalWcfClientIwaInterceptorExtensions")
+                    isExtensionExist = true;
+            }
+
+            return isExtensionExist;
+        }
+
+        private static XmlElement GetOrCreateBehaviourExtensionsNode(XmlDocument doc, XmlElement extensions)
+        {
+            var behaviorExtensions = (XmlElement)extensions.SelectSingleNode("behaviorExtensions");
+
+            if (behaviorExtensions == null)
+            {
+                behaviorExtensions = doc.CreateElement("behaviorExtensions");
+                extensions.AppendChild(behaviorExtensions);
+            }
+
+            return behaviorExtensions;
+        }
+
+        private static XmlElement GetOrCreateExtensionsNode(XmlDocument doc, XmlNode serviceModel)
+        {
+            var extensions = (XmlElement)serviceModel.SelectSingleNode("extensions");
+
+            if (extensions == null)
+            {
+                extensions = doc.CreateElement("extensions");
+                serviceModel.AppendChild(extensions);
+            }
+
+            return extensions;
+        }
+
+        private static void ApplyBehaviourConfigurationToEndpointsNotHavingBahaviourConfiguredAlready(XmlDocument doc, XmlNodeList endpoints)
+        {
+            for (int i = 0; i < endpoints.Count; i++)
+            {
+                var elbc = endpoints.Item(0).Attributes["behaviorConfiguration"]?.Value;
+
+                if (string.IsNullOrWhiteSpace(elbc))
+                {
+                    var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
+                    behaviourConfigurationAttribute.Value = "pivotalWcfClientIwaInterceptorBehaviour";
+                    endpoints.Item(i).Attributes.Append(behaviourConfigurationAttribute);
+                }
+            }
+        }
+
+        private void AddPivotalWcfClientIwaInterceptorExtensionsToPreExistingClientEndpointBehaviours(XmlDocument doc, List<string> svcEndpointLevelBehaviours, List<string> clientEndpointLevelBehaviours, XmlNodeList individualBehaviours)
+        {
+            for (int i = 0; i < individualBehaviours.Count; i++)
+            {
+                var behaviourName = individualBehaviours.Item(i).Attributes["name"].Value;
+
+                if (svcEndpointLevelBehaviours.Contains(behaviourName) && clientEndpointLevelBehaviours.Contains(behaviourName))
+                {
+                    Console.Error.WriteLine($"EndPointBehaviour '{behaviourName}' is shared by client and service. Please split them and continue!");
+                    Environment.Exit(-1);
+                }
+                else if (!svcEndpointLevelBehaviours.Contains(behaviourName))
+                {
+                    if (individualBehaviours.Item(i).SelectSingleNode("pivotalWcfClientIwaInterceptorExtensions") == null)
+                    {
+                        individualBehaviours.Item(i).AppendChild(AddInterceptorExtension(doc));
+                    }
+                }
+            }
+        }
+
+        private static void SetPivotalWcfClientIwaInterceptorBehaviourToAllEndpoints(XmlDocument doc, XmlNode client)
+        {
+            var endPoints = client.SelectNodes("endpoint");
+
+            for (int i = 0; i < endPoints.Count; i++)
+            {
+                var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
+                behaviourConfigurationAttribute.Value = "pivotalWcfClientIwaInterceptorBehaviour";
+                endPoints.Item(i).Attributes.Append(behaviourConfigurationAttribute);
+            }
+        }
+
+        private void CreatePivotalWcfClientIwaInterceptorBehaviour(XmlDocument doc, XmlElement endpointBehaviours)
+        {
+            var pivotalWcfClientIwaInterceptorBehaviour = doc.CreateElement("behavior");
+            pivotalWcfClientIwaInterceptorBehaviour.SetAttribute("name", "pivotalWcfClientIwaInterceptorBehaviour");
+            pivotalWcfClientIwaInterceptorBehaviour.AppendChild(AddInterceptorExtension(doc));
+            endpointBehaviours.AppendChild(pivotalWcfClientIwaInterceptorBehaviour);
+        }
+
+        private static bool PivotalWcfClientIwaInterceptorBehaviourExistsAlready(XmlNodeList individualBehaviours)
+        {
+            bool pivotalWcfClientIwaInterceptorBehaviourExists = false;
+
+            for (int i = 0; i < individualBehaviours.Count; i++)
+            {
+                if (individualBehaviours.Item(i).Attributes["name"].Value == "pivotalWcfClientIwaInterceptorBehaviour")
+                    pivotalWcfClientIwaInterceptorBehaviourExists = true;
+            }
+
+            return pivotalWcfClientIwaInterceptorBehaviourExists;
         }
 
         private static XmlElement GetOrCreateEndPointBehaviours(XmlDocument doc, XmlElement behaviours)
@@ -344,13 +388,19 @@ namespace RouteServiceAuthenticationBuildpack
         private void AddAuthorizationElementToBehaviour(XmlDocument doc, XmlNodeList individualBehaviours, int i)
         {
             individualBehaviours.Item(i).AppendChild(CreateServiceAuthorizationElement(doc, (XmlElement)individualBehaviours.Item(i)));
+            individualBehaviours.Item(i).AppendChild(CreateDefaultServiceBehaviourElementServiceDebug(doc, (XmlElement)individualBehaviours.Item(i)));
+            individualBehaviours.Item(i).AppendChild(CreateDefaultServiceBehaviourElementServiceMetadata(doc, (XmlElement)individualBehaviours.Item(i)));
+            individualBehaviours.Item(i).AppendChild(CreateDefaultServiceBehaviourElementUseRequestHeadersForMetadataAddress(doc, (XmlElement)individualBehaviours.Item(i)));
         }
 
         private static void SetPivotaWcfServiceIwaAuthBehaviourConfigurationToService(XmlDocument doc, XmlNodeList individualServices, int i)
         {
-            var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
-            behaviourConfigurationAttribute.Value = "PivotaWcfServiceIwaAuthBehaviour";
-            individualServices.Item(i).Attributes.Append(behaviourConfigurationAttribute);
+            if (individualServices.Item(i).Attributes["behaviorConfiguration"] == null)
+            {
+                var behaviourConfigurationAttribute = doc.CreateAttribute("behaviorConfiguration");
+                behaviourConfigurationAttribute.Value = "PivotaWcfServiceIwaAuthBehaviour";
+                individualServices.Item(i).Attributes.Append(behaviourConfigurationAttribute);
+            }
         }
 
         private void CreatePivotalServiceBehaviour(XmlDocument doc, XmlElement serviceBehaviours)
@@ -358,6 +408,9 @@ namespace RouteServiceAuthenticationBuildpack
             var individualBehaviour = doc.CreateElement("behavior");
             individualBehaviour.SetAttribute("name", "PivotaWcfServiceIwaAuthBehaviour");
             individualBehaviour.AppendChild(CreateServiceAuthorizationElement(doc, individualBehaviour));
+            individualBehaviour.AppendChild(CreateDefaultServiceBehaviourElementServiceDebug(doc, individualBehaviour));
+            individualBehaviour.AppendChild(CreateDefaultServiceBehaviourElementServiceMetadata(doc, individualBehaviour));
+            individualBehaviour.AppendChild(CreateDefaultServiceBehaviourElementUseRequestHeadersForMetadataAddress(doc, individualBehaviour));
             serviceBehaviours.AppendChild(individualBehaviour);
         }
 
@@ -414,6 +467,48 @@ namespace RouteServiceAuthenticationBuildpack
         {
             var extension = xmlDoc.CreateElement("pivotalWcfClientIwaInterceptorExtensions");
             return extension;
+        }
+
+        private XmlElement CreateDefaultServiceBehaviourElementServiceMetadata(XmlDocument xmlDoc, XmlElement individualBehaviour)
+        {
+            var serviceMetadata = individualBehaviour.SelectSingleNode("serviceMetadata");
+
+            if (serviceMetadata == null)
+            {
+                serviceMetadata = xmlDoc.CreateElement("serviceMetadata");
+
+                var attribute = xmlDoc.CreateAttribute("httpGetEnabled");
+                attribute.Value = "true";
+                serviceMetadata.Attributes.Append(attribute);
+            }
+
+            return (XmlElement)serviceMetadata;
+        }
+
+        private XmlElement CreateDefaultServiceBehaviourElementServiceDebug(XmlDocument xmlDoc, XmlElement individualBehaviour)
+        {
+            var serviceDebug = individualBehaviour.SelectSingleNode("serviceDebug");
+
+            if (serviceDebug == null)
+            {
+                serviceDebug = xmlDoc.CreateElement("serviceDebug");
+
+                var attribute = xmlDoc.CreateAttribute("includeExceptionDetailInFaults");
+                attribute.Value = "false";
+                serviceDebug.Attributes.Append(attribute);
+            }
+
+            return (XmlElement)serviceDebug;
+        }
+
+        private XmlElement CreateDefaultServiceBehaviourElementUseRequestHeadersForMetadataAddress(XmlDocument xmlDoc, XmlElement individualBehaviour)
+        {
+            var useRequestHeadersForMetadataAddress = individualBehaviour.SelectSingleNode("useRequestHeadersForMetadataAddress");
+
+            if (useRequestHeadersForMetadataAddress == null)
+                useRequestHeadersForMetadataAddress = xmlDoc.CreateElement("useRequestHeadersForMetadataAddress");
+
+            return (XmlElement)useRequestHeadersForMetadataAddress;
         }
 
         private XmlElement CreateServiceAuthorizationElement(XmlDocument xmlDoc, XmlElement individualBehaviour)
