@@ -30,7 +30,7 @@ namespace Pivotal.RouteServiceAuthorizationPolicy
             {
                 evaluationContext.Properties["Principal"] = HttpContext.Current.User;
             }
-            catch
+            catch 
             {}
 
             return true;
