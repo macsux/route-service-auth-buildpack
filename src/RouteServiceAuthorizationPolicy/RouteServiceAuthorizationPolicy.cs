@@ -26,7 +26,13 @@ namespace Pivotal.RouteServiceAuthorizationPolicy
 
         public bool Evaluate(EvaluationContext evaluationContext, ref object state)
         {
-            evaluationContext.Properties["Principal"] = HttpContext.Current.User;
+            try
+            {
+                evaluationContext.Properties["Principal"] = HttpContext.Current.User;
+            }
+            catch
+            {}
+
             return true;
         }
     }
