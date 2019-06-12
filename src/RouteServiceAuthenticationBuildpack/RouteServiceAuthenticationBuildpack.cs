@@ -14,6 +14,7 @@ namespace RouteServiceAuthenticationBuildpack
     public class RouteServiceAuthenticationBuildpack : SupplyBuildpack
     {
         const string INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT_ENV_VAR_NM = "INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT";
+        const string INCLUDE_INGRESS_MODULE_FOR_WCF_SERVICE_ENV_VAR_NM = "INCLUDE_INRESS_MODULE_FOR_WCF_SERVICE";
 
         protected override bool Detect(string buildPath)
         {
@@ -99,6 +100,15 @@ namespace RouteServiceAuthenticationBuildpack
             if (services != null)
             {
                 Console.WriteLine("-----> Detected WCF Service application");
+
+                var isIngressModuleRequired = Convert.ToBoolean(Environment.GetEnvironmentVariable(INCLUDE_INGRESS_MODULE_FOR_WCF_SERVICE_ENV_VAR_NM) ?? "true");
+
+                if (!isIngressModuleRequired)
+                {
+                    Console.WriteLine($"-----> **WARNING** Skipping configuring ingress modules(wcf authorization policy) for this WCF service as the environment variable '{INCLUDE_INGRESS_MODULE_FOR_WCF_SERVICE_ENV_VAR_NM}' is set to 'false'");
+                    return;
+                }
+
                 Console.WriteLine("-----> Applying configuration changes to add RouteServiceAuthorizationPolicy into the pipeline...");
 
                 var serviceModel = doc.SelectSingleNode("configuration/system.serviceModel");

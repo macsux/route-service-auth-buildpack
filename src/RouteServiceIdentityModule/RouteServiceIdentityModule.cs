@@ -9,7 +9,6 @@ namespace Pivotal.RouteServiceIdentityModule
         public void Init(HttpApplication context)
         {
             context.AuthenticateRequest += ContextOnAuthenticateRequest;
-            
         }
 
         private void ContextOnAuthenticateRequest(object sender, EventArgs e)

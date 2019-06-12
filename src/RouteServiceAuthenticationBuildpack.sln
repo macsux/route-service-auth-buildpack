@@ -15,7 +15,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{864B2D7B-6D3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{BEC58DF4-A7B7-4433-A4F5-E3C03B0D8DC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "..\test\UnitTests\UnitTests.csproj", "{DF01BC14-3CEA-4BEB-AE6E-BA0616B6186D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "..\test\UnitTests\UnitTests.csproj", "{DF01BC14-3CEA-4BEB-AE6E-BA0616B6186D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution_items", "solution_items", "{E8B9BA22-1FD3-460E-B29C-62D6346FB75A}"
+	ProjectSection(SolutionItems) = preProject
+		..\.gitignore = ..\.gitignore
+		..\nuget.config = ..\nuget.config
+		..\README.MD = ..\README.MD
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
