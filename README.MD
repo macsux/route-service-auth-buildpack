@@ -5,4 +5,4 @@
 
 ##### Controlling Environment Variables:
 1. `INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT` (Default value: `false`) -- Set it to `true` if the wcf client needs to egress processing, to call a secured (protected by route service) wcf service 
-2. `INCLUDE_INRESS_MODULE_FOR_WCF_SERVICE` (Default value: 'true') -- Set it to `false` if the wcf service is not secured by a route service
+2. `INCLUDE_INRESS_MODULE_FOR_WCF_SERVICE` (Default value: `true`) -- Set it to `false` if the wcf service is not secured by a route service
