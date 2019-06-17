@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28729.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pivotal.RouteService.Auth.Ingress.Buildpack", "src\PivotalRouteServiceAuthIngressBuildpack\Pivotal.RouteService.Auth.Ingress.Buildpack.csproj", "{512F3F46-B79C-40C7-B148-7E1DDDE3DA54}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{F6E63DDE-EC41-4756-A6A3-7BF6A3ACC172}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C29B8DB0-888D-4E5E-836D-52D5514D36E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{B96EA39A-08ED-44CD-BB1C-B896A550ED1B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{03A09C25-58D3-40BC-9A48-698F566F3321}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "tests\UnitTests\UnitTests.csproj", "{0CAB89E0-69D5-4FEE-8AAB-491DCC677FE4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution_items", "solution_items", "{EF5A00A0-6973-4758-8EA2-697D2F37614C}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		nuget.config = nuget.config
+		README.MD = README.MD
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RouteServiceAuthorizationPolicy", "src\PivotalRouteServiceAuthorizationPolicy\RouteServiceAuthorizationPolicy.csproj", "{2B97C6C9-9D38-422E-BE85-19FAC38BE86A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteServiceIdentityModule", "src\PivotalRouteServiceIdentityModule\RouteServiceIdentityModule.csproj", "{9C1ACF29-1337-449D-AA50-64599147087F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{512F3F46-B79C-40C7-B148-7E1DDDE3DA54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{512F3F46-B79C-40C7-B148-7E1DDDE3DA54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{512F3F46-B79C-40C7-B148-7E1DDDE3DA54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{512F3F46-B79C-40C7-B148-7E1DDDE3DA54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6E63DDE-EC41-4756-A6A3-7BF6A3ACC172}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6E63DDE-EC41-4756-A6A3-7BF6A3ACC172}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CAB89E0-69D5-4FEE-8AAB-491DCC677FE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CAB89E0-69D5-4FEE-8AAB-491DCC677FE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CAB89E0-69D5-4FEE-8AAB-491DCC677FE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CAB89E0-69D5-4FEE-8AAB-491DCC677FE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B97C6C9-9D38-422E-BE85-19FAC38BE86A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B97C6C9-9D38-422E-BE85-19FAC38BE86A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B97C6C9-9D38-422E-BE85-19FAC38BE86A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B97C6C9-9D38-422E-BE85-19FAC38BE86A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C1ACF29-1337-449D-AA50-64599147087F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C1ACF29-1337-449D-AA50-64599147087F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C1ACF29-1337-449D-AA50-64599147087F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C1ACF29-1337-449D-AA50-64599147087F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{512F3F46-B79C-40C7-B148-7E1DDDE3DA54} = {C29B8DB0-888D-4E5E-836D-52D5514D36E8}
+		{F6E63DDE-EC41-4756-A6A3-7BF6A3ACC172} = {03A09C25-58D3-40BC-9A48-698F566F3321}
+		{0CAB89E0-69D5-4FEE-8AAB-491DCC677FE4} = {B96EA39A-08ED-44CD-BB1C-B896A550ED1B}
+		{2B97C6C9-9D38-422E-BE85-19FAC38BE86A} = {C29B8DB0-888D-4E5E-836D-52D5514D36E8}
+		{9C1ACF29-1337-449D-AA50-64599147087F} = {C29B8DB0-888D-4E5E-836D-52D5514D36E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {562B0D1A-9FD1-4FE2-AA87-CA7A9C5D4E89}
+	EndGlobalSection
+EndGlobal

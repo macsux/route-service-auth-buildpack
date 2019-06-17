@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net47</TargetFramework>
+    <RootNamespace>Pivotal.RouteServiceAuthorizationPolicy</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+</Project>
