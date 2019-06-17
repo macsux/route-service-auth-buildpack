@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net47</TargetFrameworks>
+    <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <RootNamespace>Pivotal.RouteService.Auth.Ingress.Buildpack</RootNamespace>
+    <AssemblyName>buildpack</AssemblyName>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PivotalServices.WcfClient.Kerberos.Interceptor" Version="1.1.7-beta" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PivotalRouteServiceAuthorizationPolicy\RouteServiceAuthorizationPolicy.csproj" />
+    <ProjectReference Include="..\PivotalRouteServiceIdentityModule\RouteServiceIdentityModule.csproj" />
+  </ItemGroup>
+    
+</Project>

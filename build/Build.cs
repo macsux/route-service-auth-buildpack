@@ -36,21 +36,21 @@ class Build : NukeBuild
         Windows,
         Linux
     }
-    public static int Main () => Execute<Build>(x => x.Publish);
-    const string BuildpackProjectName = "RouteServiceAuthenticationBuildpack";
+    public static int Main() => Execute<Build>(x => x.Publish);
+    const string BuildpackProjectName = "Pivotal.RouteService.Auth.Ingress.Buildpack";
     string PackageZipName => $"{BuildpackProjectName}-{Runtime}-{GitVersion.MajorMinorPatch}.zip";
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
-    
+
     [Parameter("Target CF stack type - 'windows' or 'linux'. Determines buildpack runtime (Framework or Core). Default is 'windows'")]
     readonly StackType Stack = StackType.Windows;
-    
+
     [Parameter("GitHub personal access token with access to the repo")]
     string GitHubToken;
 
-    string Runtime => Stack == StackType.Windows ? "win-x64" : "linux-x64";  
-    string Framework => Stack == StackType.Windows ? "net472" : "netcoreapp2.2";
+    string Runtime => Stack == StackType.Windows ? "win-x64" : "linux-x64";
+    string Framework => Stack == StackType.Windows ? "net47" : "netcoreapp2.2";
 
 
     [Solution] readonly Solution Solution;
@@ -66,13 +66,14 @@ class Build : NukeBuild
         .Before(Restore)
         .Executes(() =>
         {
-            SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
-            TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
-            //EnsureCleanDirectory(ArtifactsDirectory);
+            SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteFile);
+            TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteFile);
+            EnsureCleanDirectory(ArtifactsDirectory);
         });
 
     Target Restore => _ => _
         .Description("Restores NuGet dependencies for the buildpack")
+        .DependsOn(Clean)
         .Executes(() =>
         {
             DotNetRestore(s => s
@@ -96,10 +97,20 @@ class Build : NukeBuild
                 .SetInformationalVersion(GitVersion.InformationalVersion)
                 .EnableNoRestore());
         });
-    
+
+    Target Test => _ => _
+        .Description("Execute tests")
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            DotNetTest(s => s
+                .SetProjectFile(Solution)
+                .EnableNoRestore());
+        });
+
     Target Publish => _ => _
         .Description("Packages buildpack in Cloud Foundry expected format into /artifacts directory")
-        .DependsOn(Restore)
+        .DependsOn(Test)
         .Executes(() =>
         {
             DotNetPublish(s => s
@@ -111,6 +122,7 @@ class Build : NukeBuild
                 .SetFileVersion(GitVersion.GetNormalizedFileVersion())
                 .SetInformationalVersion(GitVersion.InformationalVersion)
                 .EnableNoRestore());
+
             var workDirectory = TemporaryDirectory / "pack";
             EnsureCleanDirectory(TemporaryDirectory);
             var buildpackProject = Solution.GetProject(BuildpackProjectName);
@@ -118,21 +130,18 @@ class Build : NukeBuild
             var workBinDirectory = workDirectory / "bin";
             var scriptsDirectory = RootDirectory / "scripts";
 
-            var requiredAssembliesSourceDirectory = SourceDirectory / "requiredAssemblies";
-            var requiredAssembliesTargetDirectory = workBinDirectory / "requiredAssemblies";
-            
             CopyDirectoryRecursively(publishDirectory, workBinDirectory, DirectoryExistsPolicy.Merge);
             CopyDirectoryRecursively(scriptsDirectory, workBinDirectory, DirectoryExistsPolicy.Merge);
-            CopyDirectoryRecursively(requiredAssembliesSourceDirectory, requiredAssembliesTargetDirectory, DirectoryExistsPolicy.Merge);
+
             var tempZipFile = TemporaryDirectory / PackageZipName;
-            
+
             ZipFile.CreateFromDirectory(workDirectory, tempZipFile);
             MakeFilesInZipUnixExecutable(tempZipFile);
             CopyFileToDirectory(tempZipFile, ArtifactsDirectory, FileExistsPolicy.Overwrite);
             Logger.Block(ArtifactsDirectory / PackageZipName);
 
         });
-    
+
 
     Target Release => _ => _
         .Description("Creates a GitHub release (or ammends existing) and uploads buildpack artifact")
@@ -142,7 +151,7 @@ class Build : NukeBuild
         {
             if (!GitRepository.IsGitHubRepository())
                 throw new Exception("Only supported when git repo remote is github");
-            
+
             var client = new GitHubClient(new ProductHeaderValue(BuildpackProjectName))
             {
                 Credentials = new Credentials(GitHubToken, AuthenticationType.Bearer)
@@ -150,7 +159,7 @@ class Build : NukeBuild
             var gitIdParts = GitRepository.Identifier.Split("/");
             var owner = gitIdParts[0];
             var repoName = gitIdParts[1];
-            
+
             var releaseName = $"v{GitVersion.MajorMinorPatch}";
             Release release;
             try
@@ -161,8 +170,8 @@ class Build : NukeBuild
             {
                 var newRelease = new NewRelease(releaseName)
                 {
-                    Name = releaseName, 
-                    Draft = false, 
+                    Name = releaseName,
+                    Draft = false,
                     Prerelease = false
                 };
                 release = await client.Repository.Release.Create(owner, repoName, newRelease);
@@ -173,11 +182,11 @@ class Build : NukeBuild
             {
                 await client.Repository.Release.DeleteAsset(owner, repoName, existingAsset.Id);
             }
-            
+
             var zipPackageLocation = ArtifactsDirectory / PackageZipName;
             var releaseAssetUpload = new ReleaseAssetUpload(PackageZipName, "application/zip", File.OpenRead(zipPackageLocation), null);
             var releaseAsset = await client.Repository.Release.UploadAsset(release, releaseAssetUpload);
-            
+
             Logger.Block(releaseAsset.BrowserDownloadUrl);
         });
 
@@ -189,7 +198,7 @@ class Build : NukeBuild
         {
             output.SetLevel(9);
             ZipEntry entry;
-		
+
             while ((entry = input.GetNextEntry()) != null)
             {
                 var outEntry = new ZipEntry(entry.Name);
@@ -203,6 +212,6 @@ class Build : NukeBuild
         }
 
         DeleteFile(zipFile);
-        RenameFile(tmpFileName,zipFile, FileExistsPolicy.Overwrite);
+        RenameFile(tmpFileName, zipFile, FileExistsPolicy.Overwrite);
     }
 }
