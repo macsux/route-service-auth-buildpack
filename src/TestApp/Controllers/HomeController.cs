@@ -7,6 +7,7 @@ namespace TestApp.Controllers
     {
         public ActionResult Index()
         {
+            Console.WriteLine("X-CF-Identity: " + Request.Headers.Get("X-CF-Identity"));
             Console.WriteLine("User: " + User.Identity.Name);
             return View();
         }

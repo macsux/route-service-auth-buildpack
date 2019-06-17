@@ -1,7 +1,11 @@
-## Supply buildpack to establish Thread identity
+#### This project offers a supply buildpack which helps applying IWA security (kerberos) to applications running in PCF, together with the below components.
 
-This buildpack will inject HTTP module into apps that are started by HWC buildpack to establish a thread ClaimsPrincipal using X-CF-Identity header. This is to be used in conjunction with [Keberos Route Service](<https://github.com/macsux/route-service-auth>) allowing zero-code-change Kerberos authentication in legacy .NET apps.
+1. Route Service (https://github.com/macsux/route-service-auth)
+2. Nuget Package 'PivotalServices.WcfClient.Kerberos.Interceptor' (https://github.com/alfusinigoj/wcf-client-interceptor-egress-kerberos-auth), (egress) in case of Wcf Client connect to a secured service Wcf Service. **Note: This package is not required for any ingress scenario.**
+
 
 #### WARNING
-
 Using this buildpack without the above route service will expose your application to security risk as PCF natively does not strip X-CF-Identity header which would allow to be spoofed from external requests
+##### Controlling Environment Variables:
+1. `INCLUDE_EGRESS_MODULE_FOR_WCF_CLIENT` (Default value: `false`) -- Set it to `true` if the wcf client needs to egress processing, to call a secured (protected by route service) wcf service 
+2. `INCLUDE_INRESS_MODULE_FOR_WCF_SERVICE` (Default value: `true`) -- Set it to `false` if the wcf service is not secured by a route service

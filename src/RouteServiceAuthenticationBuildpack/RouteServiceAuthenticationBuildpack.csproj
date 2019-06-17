@@ -5,9 +5,15 @@
     <RootNamespace>RouteServiceAuthenticationBuildpack</RootNamespace>
     <AssemblyName>buildpack</AssemblyName>
     <OutputType>Exe</OutputType>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="PivotalServices.WcfClient.Kerberos.Interceptor" Version="1.0.0-beta" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RouteServiceAuthorizationPolicy\RouteServiceAuthorizationPolicy.csproj" />
     <ProjectReference Include="..\RouteServiceIdentityModule\RouteServiceIdentityModule.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RouteServiceAuthenticationBuildpack": {
+      "commandName": "Project",
+      "commandLineArgs": "supply C:\\Development\\Sandbox\\C2CSpike\\WcfClient\\WcfClient a a 0"
+    }
+  }
+}
