@@ -14,6 +14,8 @@ namespace Pivotal.RouteServiceIdentityModule
         private void ContextOnAuthenticateRequest(object sender, EventArgs e)
         {
             var context = ((HttpApplication) sender).Context;
+            if (context.User?.Identity?.IsAuthenticated ?? false)
+                return;
             var identityHeader = context.Request.Headers.Get("X-Cf-Identity");
             if (identityHeader != null)
             {
