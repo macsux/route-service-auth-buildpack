@@ -12,11 +12,11 @@ namespace Pivotal.RouteService.Auth.Ingress.Buildpack.Identity
         public WebConfigFileAppender(string webConfigPath)
         {
             this.webConfigPath = webConfigPath;
-            doc.Load(webConfigPath);
         }
 
         public void Execute()
         {
+            doc.Load(webConfigPath);
             if (doc.SelectSingleNode("configuration/system.webServer/modules/add[@name=\"RouteServiceIdentityModule\"]") == null)
             {
                 Console.WriteLine("-----> Applying configuration changes to add RouteServiceIdentityModule in the request pipeline...");

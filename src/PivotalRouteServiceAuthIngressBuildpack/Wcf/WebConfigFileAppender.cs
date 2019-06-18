@@ -12,11 +12,12 @@ namespace Pivotal.RouteService.Auth.Ingress.Buildpack.Wcf
         public WebConfigFileAppender(string webConfigPath)
         {
             this.webConfigPath = webConfigPath;
-            doc.Load(webConfigPath);
         }
 
         public void Execute()
         {
+            doc.Load(webConfigPath);
+
             Console.WriteLine("-----> Applying configuration changes to add RouteServiceAuthorizationPolicy into the pipeline...");
 
             var services = doc.SelectSingleNode("configuration/system.serviceModel/services");

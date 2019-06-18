@@ -28,7 +28,9 @@ namespace Pivotal.RouteServiceAuthorizationPolicy
         {
             try
             {
+                Console.WriteLine($"Current HttpContext User: {HttpContext.Current.User}");
                 evaluationContext.Properties["Principal"] = HttpContext.Current.User;
+                Console.WriteLine($"Current Thread Principal User: {evaluationContext.Properties["Principal"]}");
             }
             catch
             {
