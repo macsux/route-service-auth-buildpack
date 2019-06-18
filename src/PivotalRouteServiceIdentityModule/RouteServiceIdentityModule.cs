@@ -6,6 +6,10 @@ namespace Pivotal.RouteServiceIdentityModule
 {
     public class RouteServiceIdentityModule : IHttpModule
     {
+        const string CF_IDENTITY_HEADER = "X-Cf-Identity";
+        const string CF_IMPERSONATED_IDENTITY_HEADER = "X-Cf-ImpersonatedIdentity";
+
+
         public void Init(HttpApplication context)
         {
             context.AuthenticateRequest += ContextOnAuthenticateRequest;
@@ -15,10 +19,9 @@ namespace Pivotal.RouteServiceIdentityModule
         {
             var context = ((HttpApplication) sender).Context;
 
-            if (context.User?.Identity?.IsAuthenticated ?? false)
-                return;
+            var identityHeader = context.Request.Headers.Get(CF_IMPERSONATED_IDENTITY_HEADER) 
+                                    ?? context.Request.Headers.Get(CF_IDENTITY_HEADER);
 
-            var identityHeader = context.Request.Headers.Get("X-Cf-Identity");
             if (identityHeader != null)
             {
                 var nameClaim = new Claim(ClaimTypes.Name, identityHeader);
